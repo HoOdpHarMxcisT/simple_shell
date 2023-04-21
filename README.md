@@ -18,19 +18,19 @@
 - You should have an AUTHORS file at the root of your repository, listing all individuals having contributed content to the repository. Format, see Docker
 
 # Tasks
-0. 'Betty would be proud'
+0. ___[Betty would be proud](https://github.com/HoOdpHarMxcisT/simple_shell/blob/master/0-betty_style.c)___
 - This code follows the Betty style guidelines, which typically include rules for indentation (4 spaces), naming conventions (e.g., lowercase with underscores for variables and functions, uppercase with underscores for constants), and other formatting guidelines
-1. 'Simple shell 0.1'
+2. 'Simple shell 0.1'
  - It displays a prompt, waits for the user to type a command, tokenizes the command into arguments, forks a child process to execute the command, and waits for the child process to finish before displaying the prompt again. It also handles errors and the end of file condition (Ctrl+D) gracefully.
-2. 'Simple shell 0.2'
+3. 'Simple shell 0.2'
 - This use uses execvp() to execute the command with arguments. It tokenizes the command into arguments based on space, tab, and newline characters, and passes the arguments to execvp() to execute the command along with its arguments.
-3. 'Simple shell 0.3'
+4. 'Simple shell 0.3'
 - This uses access() to check if the command exists in the directories listed in the PATH environment variable before forking a child process to execute it. It also passes the envp argument to execve() to preserve the environment variables, which includes the PATH variable
-4. 'Simple shell 0.4'
+5. 'Simple shell 0.4'
  - the shell checks if the command is the "exit" built-in command before attempting to execute it. If the command is "exit", the shell exits gracefully with a status code of 0. Otherwise, the shell continues to execute the command as before.
-5. 'Simple shell 1.0'
+6. 'Simple shell 1.0'
 - the shell checks if the command is the "env" built-in command
-6. Simple shell 0.1.1
+7. Simple shell 0.1.1
 The function my_getline() uses static variables to store the buffer, buffer position, and buffer size, so that the buffer can be reused across multiple function calls.
 The function reads data into the buffer using read() system call, but only when the buffer is empty or all the characters in the buffer have been read.
 It copies characters from the buffer to the memory pointed by lineptr one by one, resizing the memory if necessary using realloc().
