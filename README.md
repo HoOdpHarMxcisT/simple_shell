@@ -1,35 +1,35 @@
-0x16. C - Simple Shell
-C
-Group project
-Team member: STANLEY RATSHILI & Clement Mphethi
+# 0x16. C - Simple Shell
 
-Requirements
-General
-Allowed editors: vi, vim, emacs
-All your files will be compiled on Ubuntu 20.04 LTS using gcc, using the options -Wall -Werror -Wextra -pedantic -std=gnu89
-All your files should end with a new line
-A README.md file, at the root of the folder of the project is mandatory
-Your code should use the Betty style. It will be checked using betty-style.pl and betty-doc.pl
-Your shell should not have any memory leaks
-No more than 5 functions per file
-All your header files should be include guarded
-Use system calls only when you need to (why?)
-Write a README with the description of your project
-You should have an AUTHORS file at the root of your repository, listing all individuals having contributed content to the repository. Format, see Docker
+## Group project
+## Team member: **STANLEY RATSHILI & Clement Mphethi**
 
-Tasks
-0. Betty would be proud
-This code follows the Betty style guidelines, which typically include rules for indentation (4 spaces), naming conventions (e.g., lowercase with underscores for variables and functions, uppercase with underscores for constants), and other formatting guidelines
-1. Simple shell 0.1
- It displays a prompt, waits for the user to type a command, tokenizes the command into arguments, forks a child process to execute the command, and waits for the child process to finish before displaying the prompt again. It also handles errors and the end of file condition (Ctrl+D) gracefully.
-2. Simple shell 0.2
-This use uses execvp() to execute the command with arguments. It tokenizes the command into arguments based on space, tab, and newline characters, and passes the arguments to execvp() to execute the command along with its arguments.
-3. Simple shell 0.3
-This uses access() to check if the command exists in the directories listed in the PATH environment variable before forking a child process to execute it. It also passes the envp argument to execve() to preserve the environment variables, which includes the PATH variable
-4. Simple shell 0.4
- the shell checks if the command is the "exit" built-in command before attempting to execute it. If the command is "exit", the shell exits gracefully with a status code of 0. Otherwise, the shell continues to execute the command as before.
-5. Simple shell 1.0
-the shell checks if the command is the "env" built-in command
+# Requirements
+# General
+- Allowed editors: vi, vim, emacs
+- All your files will be compiled on Ubuntu 20.04 LTS using gcc, using the options -Wall -Werror -Wextra -pedantic -std=gnu89
+- All your files should end with a new line
+- A README.md file, at the root of the folder of the project is mandatory
+- Your code should use the Betty style. It will be checked using betty-style.pl and betty-doc.pl
+- Your shell should not have any memory leaks
+- No more than 5 functions per file
+- All your header files should be include guarded
+- Use system calls only when you need to (why?)
+- Write a README with the description of your project
+- You should have an AUTHORS file at the root of your repository, listing all individuals having contributed content to the repository. Format, see Docker
+
+# Tasks
+0. 'Betty would be proud'
+- This code follows the Betty style guidelines, which typically include rules for indentation (4 spaces), naming conventions (e.g., lowercase with underscores for variables and functions, uppercase with underscores for constants), and other formatting guidelines
+1. 'Simple shell 0.1'
+ - It displays a prompt, waits for the user to type a command, tokenizes the command into arguments, forks a child process to execute the command, and waits for the child process to finish before displaying the prompt again. It also handles errors and the end of file condition (Ctrl+D) gracefully.
+2. 'Simple shell 0.2'
+- This use uses execvp() to execute the command with arguments. It tokenizes the command into arguments based on space, tab, and newline characters, and passes the arguments to execvp() to execute the command along with its arguments.
+3. 'Simple shell 0.3'
+- This uses access() to check if the command exists in the directories listed in the PATH environment variable before forking a child process to execute it. It also passes the envp argument to execve() to preserve the environment variables, which includes the PATH variable
+4. 'Simple shell 0.4'
+ - the shell checks if the command is the "exit" built-in command before attempting to execute it. If the command is "exit", the shell exits gracefully with a status code of 0. Otherwise, the shell continues to execute the command as before.
+5. 'Simple shell 1.0'
+- the shell checks if the command is the "env" built-in command
 6. Simple shell 0.1.1
 The function my_getline() uses static variables to store the buffer, buffer position, and buffer size, so that the buffer can be reused across multiple function calls.
 The function reads data into the buffer using read() system call, but only when the buffer is empty or all the characters in the buffer have been read.
