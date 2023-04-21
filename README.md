@@ -1,4 +1,4 @@
-# 0x16. C - Simple Shell
+> # 0x16. C - Simple Shell
 
 ## Group project
 
@@ -8,7 +8,7 @@
 - How to create processes
 - What are the three prototypes of main
 - How does the shell use the PATH to find the programs
-- The project was done as a team work 2 contributors - ___[STANLEY RATSHILI]()___ and ___[Clement Mphethi]()___ , with the intention of learning more about team colaboration using Git and also enabling work flow with so many files.
+- The project was done as a team work 2 contributors - ___[STANLEY RATSHILI]()___ and ___[CLEMENT MPHETHI]()___ , with the intention of learning more about team colaboration using Git and also enabling work flow with so many files.
 
 # Tasks
 0. ___[Betty would be proud](https://github.com/HoOdpHarMxcisT/simple_shell/blob/master/0-betty_style.c)___
@@ -52,4 +52,4 @@
 
 > # Authors
 >> ___[RATSHILI STANLEY](https://github.com/RSstanley)___
-> > > ___[Clement Mphethi](https://github.com/HoOdpHarMxcisT)___
+> > > ___[CLEMENT MPHETHI](https://github.com/HoOdpHarMxcisT)___
