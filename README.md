@@ -51,5 +51,5 @@
 - allows the user to provide a file as a command line argument. If a file is provided, the shell will read commands from the file, execute them, and then exit. If no file is provided, it will enter interactive mode where it displays a prompt ("simple_shell> ") and reads commands from stdin, allowing the user to interactively enter commands to execute.
 
 > # Authors
->> ___[RATSHILI STANLEY]
->> ___[Clement Mphethi]
+>> ___[RATSHILI STANLEY](https://github.com/RSstanley)___
+> > > ___[Clement Mphethi](https://github.com/HoOdpHarMxcisT)___
