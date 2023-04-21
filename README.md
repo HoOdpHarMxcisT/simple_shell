@@ -1,21 +1,14 @@
 # 0x16. C - Simple Shell
 
 ## Group project
-## Team member: **STANLEY RATSHILI & Clement Mphethi**
 
-# Requirements
-## General
-{ - Allowed editors: vi, vim, emacs
-- All your files will be compiled on Ubuntu 20.04 LTS using gcc, using the options -Wall -Werror -Wextra -pedantic -std=gnu89
-- All your files should end with a new line
-- A README.md file, at the root of the folder of the project is mandatory
-- Your code should use the Betty style. It will be checked using betty-style.pl and betty-doc.pl
-- Your shell should not have any memory leaks
-- No more than 5 functions per file
-- All your header files should be include guarded
-- Use system calls only when you need to (why?)
-- Write a README with the description of your project
-- You should have an AUTHORS file at the root of your repository, listing all individuals having contributed content to the repository. Format, see Docker }
+
+# About this project
+- How does a shell work
+- How to create processes
+- What are the three prototypes of main
+- How does the shell use the PATH to find the programs
+- The project was done as a team work 2 contributors - ___[STANLEY RATSHILI]()___ and ___[Clement Mphethi]()___ , with the intention of learning more about team colaboration using Git and also enabling work flow with so many files.
 
 # Tasks
 0. ___[Betty would be proud](https://github.com/HoOdpHarMxcisT/simple_shell/blob/master/0-betty_style.c)___
@@ -56,3 +49,7 @@
 - With this implementation, any input line starting with '#' character will be treated as a comment and ignored by the interpreter. All other commands will be executed as usual. The 'env' built-in command has been implemented to print the current environment, and comments denoted by '#' character will be ignored during command processing.
 16. ___[File as input](https://github.com/HoOdpHarMxcisT/simple_shell/blob/master/16-read_and_process_command.c)___
 - allows the user to provide a file as a command line argument. If a file is provided, the shell will read commands from the file, execute them, and then exit. If no file is provided, it will enter interactive mode where it displays a prompt ("simple_shell> ") and reads commands from stdin, allowing the user to interactively enter commands to execute.
+
+> # Authors
+>> ___[RATSHILI STANLEY]
+>> ___[Clement Mphethi]
