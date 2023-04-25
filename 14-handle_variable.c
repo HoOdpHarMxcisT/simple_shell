@@ -21,6 +21,7 @@ void read_command(char *command) {
 int execute_command(char *command, char **envp) {
     char *arguments[MAX_ARGUMENTS];
     int num_arguments = 0;
+	int command_status = 0;
 
     // replace "$?" with the exit status of the last executed command
     char last_exit_status[5]; // maximum length of an exit status is 4 digits

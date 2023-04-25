@@ -95,11 +95,11 @@ int main(int argc, char *argv[], char *envp[]) {
     // interactive mode
     while (1) {
         char command[MAX_COMMAND_LENGTH];
-        printf("simple_shell>
-        // interactive mode
-        while (1) {
+        printf("simple_shell>");
+
+        while (1){
             char command[MAX_COMMAND_LENGTH];
-            printf("simple_shell> ");
+            printf("simple_shell>");
             fgets(command, sizeof(command), stdin);
             execute_command(command, envp);
         }
