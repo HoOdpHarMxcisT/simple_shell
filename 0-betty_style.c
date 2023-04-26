@@ -1,27 +1,26 @@
 #include <stdio.h>
 
-#define MAX_NUM 100
+/**
+ * print_rev - imprime en reversa
+ * @s: string
+ * return: 0
+ */
+void print_rev(char *s)
+{
+	int longi = 0;
+	int o;
 
-typedef struct {
-    int x;
-    int y;
-} Point;
+	while (*s != '\0')
+	{
+		longi++;
+		s++;
+	}
+	s--;
+	for (o = longi; o > 0; o--)
+	{
+		_putchar(*s);
+		s--;
+	}
 
-void print_point(Point p) {
-    printf("(%d, %d)\n", p.x, p.y);
-}
-
-int main() {
-    Point points[MAX_NUM];
-
-    for (int i = 0; i < MAX_NUM; i++) {
-        points[i].x = i;
-        points[i].y = i * 2;
-    }
-
-    for (int i = 0; i < MAX_NUM; i++) {
-        print_point(points[i]);
-    }
-
-    return 0;
+	_putchar('\n');
 }
