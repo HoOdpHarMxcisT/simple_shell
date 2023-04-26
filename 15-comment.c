@@ -1,113 +1,158 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/wait.h>
+#include "shell.h"
 
-#define MAX_COMMAND_LENGTH 100 // maximum length of a command
-#define MAX_ARGUMENTS 10 // maximum number of arguments in a command
+/**
+ * _strcat - concatenates two strings
+ * @dest: the destination buffer
+ * @src: the source buffer
+ *
+ * Return: pointer to destination buffer
+ */
+char *_strcat(char *dest, char *src)
+{
+	char *ret = dest;
 
-extern char **environ; // declare the external variable for the environment
-
-void display_prompt() {
-    printf("simple_shell> "); // display the prompt
+	while (*dest)
+		dest++;
+	while (*src)
+		*dest++ = *src++;
+	*dest = *src;
+	return (ret);
 }
 
-void read_command(char *command) {
-    if (fgets(command, MAX_COMMAND_LENGTH, stdin) == NULL) {
-        printf("\n"); // print new line after end of file (Ctrl+D)
-        exit(0); // exit gracefully on end of file
-    }
+
+
+/**
+ * _strcpy - copies a string
+ * @dest: the destination
+ * @src: the source
+ *
+ * Return: pointer to destination
+ */
+char *_strcpy(char *dest, char *src)
+{
+	int i = 0;
+
+	if (dest == src || src == 0)
+		return (dest);
+	while (src[i])
+	{
+		dest[i] = src[i];
+		i++;
+	}
+	dest[i] = 0;
+	return (dest);
 }
 
-int execute_command(char *command, char **envp) {
-    char *arguments[MAX_ARGUMENTS];
-    int num_arguments = 0;
-    
-    // tokenize the command into arguments
-    char *token = strtok(command, " \t\n");
-    while (token != NULL && num_arguments < MAX_ARGUMENTS - 1) {
-        // check if the token is a comment denoted by '#' character
-        if (token[0] == '#') {
-            break; // ignore the rest of the line as a comment
-        }
-        arguments[num_arguments++] = token;
-        token = strtok(NULL, " \t\n");
-    }
-    arguments[num_arguments] = NULL; // set last argument to NULL for execvp
-    
-    // check if the command is the exit built-in
-    if (strcmp(arguments[0], "exit") == 0) {
-        exit(0); // exit gracefully
-    }
-    
-    // check if the command is the env built-in
-    if (strcmp(arguments[0], "env") == 0) {
-        // print the current environment
-        for (char **env = envp; *env != NULL; env++) {
-            printf("%s\n", *env);
-        }
-        return 0;
-    }
-    
-    // check if the command exists in the PATH
-    char *path = getenv("PATH");
-    char *path_copy = strdup(path);
-    token = strtok(path_copy, ":");
-    while (token != NULL) {
-        char command_path[MAX_COMMAND_LENGTH + 1];
-        snprintf(command_path, sizeof(command_path), "%s/%s", token, arguments[0]);
-        if (access(command_path, X_OK) == 0) {
-            // fork a child process to execute the command
-            pid_t pid = fork();
-            if (pid < 0) {
-                perror("fork");
-                free(path_copy);
-                return 1;
-            } else if (pid == 0) {
-                // child process
-                if (execve(command_path, arguments, envp) < 0) {
-                    perror("execve");
-                    free(path_copy);
-                    exit(1);
-                }
-            } else {
-                // parent process
-                int status;
-                waitpid(pid, &status, 0); // wait for child process to finish
-                free(path_copy);
-                if (WIFEXITED(status)) {
-                    return WEXITSTATUS(status);
-                } else {
-                    return 1;
-                }
-            }
-        }
-        token = strtok(NULL, ":");
-    }
-    free(path_copy);
-    
-    // command not found in the PATH
-    printf("Command not found: %s\n", arguments[0]);
-    return 1;
+
+
+/**
+ * klint_p - checks we should continue chaining based on last status
+ * @bret: the parameter struct
+ * @buf: the char buffer
+ * @p: address of current position in buf
+ * @i: starting position in buf
+ * @len: length of buf
+ *
+ * Return: Void
+ */
+void klint_p(bret_t *bret, char *buf, size_t *p, size_t i, size_t len)
+{
+	size_t j = *p;
+
+	if (bret->cmd_buf_type == CMD_AND)
+	{
+		if (bret->status)
+		{
+			buf[i] = 0;
+			j = len;
+		}
+	}
+	if (bret->cmd_buf_type == CMD_OR)
+	{
+		if (!bret->status)
+		{
+			buf[i] = 0;
+			j = len;
+		}
+	}
+
+	*p = j;
 }
 
-int main(int argc, char *argv[], char *envp[]) {
-    char command[MAX_COMMAND_LENGTH];
-    int status;
-    
-    while (1) {
-        display_prompt(); // display the prompt
-        read_command(command); // read a command from input
-        
-        // execute the command
-        status = execute_command(command, envp);
-        
-        // check for errors
-        if (status != 0) {
-            printf("Command exited with status %d\n", status);
-        }
-    }
-    
-    return 0;
+
+
+
+/**
+ * klint_o - replaces an aliases in the tokenized string
+ * @bret: the parameter struct
+ *
+ * Return: 1 if replaced, 0 otherwise
+ */
+int klint_o(bret_t *bret)
+{
+	int i;
+	list_t *node;
+	char *p;
+
+	for (i = 0; i < 10; i++)
+	{
+		node = node_starts_with(bret->alias, bret->argv[0], '=');
+		if (!node)
+			return (0);
+		free(bret->argv[0]);
+		p = _strchr(node->str, '=');
+		if (!p)
+			return (0);
+		p = _strdup(p + 1);
+		if (!p)
+			return (0);
+		bret->argv[0] = p;
+	}
+	return (1);
+}
+
+
+
+
+/**
+ * klint_q - function to replace vars in token string
+ * @bret: passed struct
+ *
+ * Return: 1 or 0
+ */
+int klint_q(bret_t *bret)
+{
+	int a = 0;
+	list_t *node;
+
+	for (a = 0; bret->argv[a]; a++)
+	{
+		if (bret->argv[a][0] != '$' || !bret->argv[a][1])
+		{
+			continue;
+		}
+
+		if (!_strcmp(bret->argv[a], "$?"))
+		{
+			klint_r(&(bret->argv[a]),
+				_strdup(convert_number(bret->status, 10, 0)));
+			continue;
+		}
+		if (!_strcmp(bret->argv[a], "$$"))
+		{
+			klint_r(&(bret->argv[a]),
+				_strdup(convert_number(getpid(), 10, 0)));
+			continue;
+		}
+		node = node_starts_with(bret->env, &bret->argv[a][1], '=');
+		if (node)
+		{
+			klint_r(&(bret->argv[a]),
+				_strdup(_strchr(node->str, '=') + 1));
+			continue;
+		}
+		klint_r(&bret->argv[a], _strdup(""));
+
+	}
+	return (0);
 }

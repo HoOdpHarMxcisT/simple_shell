@@ -1,108 +1,129 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/wait.h>
+#include "shell.h"
 
-#define MAX_COMMAND_LENGTH 100 // maximum length of a command
-#define MAX_ARGUMENTS 10 // maximum number of arguments in a command
+/**
+ * free_list - function to free all nodes list
+ * @head_ptr: head node
+ *
+ * Return: void
+ */
+void free_list(list_t **head_ptr)
+{
+	list_t *node, *exts_node, *heads;
 
-void display_prompt() {
-    printf("simple_shell> "); // display the prompt
+	if (!head_ptr || !*head_ptr)
+		return;
+	heads = *head_ptr;
+	node = heads;
+	while (node)
+	{
+		exts_node = node->next;
+		free(node->str);
+		free(node);
+		node = exts_node;
+	}
+	*head_ptr = NULL;
 }
 
-void read_command(char *command) {
-    if (fgets(command, MAX_COMMAND_LENGTH, stdin) == NULL) {
-        printf("\n"); // print new line after end of file (Ctrl+D)
-        exit(0); // exit gracefully on end of file
-    }
+
+
+/**
+ * klint_s - function to determine length of linked list
+ * @h: first node
+ *
+ * Return: list size
+ */
+size_t klint_s(const list_t *h)
+{
+	size_t a = 0;
+
+	while (h)
+	{
+		h = h->next;
+		a++;
+	}
+	return (a);
 }
 
-int execute_command(char *command, char **envp) {
-    char *arguments[MAX_ARGUMENTS];
-    int num_arguments = 0;
-    
-    // tokenize the command into arguments
-    char *token = strtok(command, " \t\n");
-    while (token != NULL && num_arguments < MAX_ARGUMENTS - 1) {
-        arguments[num_arguments++] = token;
-        token = strtok(NULL, " \t\n");
-    }
-    arguments[num_arguments] = NULL; // set last argument to NULL for execvp
-    
-    // check if the command is the exit built-in
-    if (strcmp(arguments[0], "exit") == 0) {
-        exit(0); // exit gracefully
-    }
-    
-    // check if the command is the env built-in
-    if (strcmp(arguments[0], "env") == 0) {
-        char **env = envp;
-        while (*env != NULL) {
-            printf("%s\n", *env);
-            env++;
-        }
-        return 0;
-    }
-    
-    // check if the command exists in the PATH
-    char *path = getenv("PATH");
-    char *path_copy = strdup(path);
-    token = strtok(path_copy, ":");
-    while (token != NULL) {
-        char command_path[MAX_COMMAND_LENGTH + 1];
-        snprintf(command_path, sizeof(command_path), "%s/%s", token, arguments[0]);
-        if (access(command_path, X_OK) == 0) {
-            // fork a child process to execute the command
-            pid_t pid = fork();
-            if (pid < 0) {
-                perror("fork");
-                free(path_copy);
-                return 1;
-            } else if (pid == 0) {
-                // child process
-                if (execve(command_path, arguments, envp) < 0) {
-                    perror("execve");
-                    free(path_copy);
-                    exit(1);
-                }
-            } else {
-                // parent process
-                int status;
-                waitpid(pid, &status, 0); // wait for child process to finish
-                free(path_copy);
-                if (WIFEXITED(status)) {
-                    return WEXITSTATUS(status);
-                } else {
-                    return 1;
-                }
-            }
-        }
-        token = strtok(NULL, ":");
-    }
-    free(path_copy);
-    
-    // command not found in the PATH
-    printf("Command not found: %s\n", arguments[0]);
-    return 1;
+
+/**
+ * list_to_strings - function to return array of strings of list->str
+ * @head: first node
+ *
+ * Return: string array
+ */
+char **list_to_strings(list_t *head)
+{
+	list_t *node = head;
+	size_t a = klint_s(head);
+	size_t b;
+	char **strss;
+	char *str;
+
+	if (!head || !a)
+		return (NULL);
+	strss = malloc(sizeof(char *) * (a + 1));
+	if (!strss)
+		return (NULL);
+	for (a = 0; node; node = node->next, a++)
+	{
+		str = malloc(_strlen(node->str) + 1);
+		if (!str)
+		{
+			for (b = 0; b < a; b++)
+				free(strss[b]);
+			free(strss);
+			return (NULL);
+		}
+		str = _strcpy(str, node->str);
+		strss[a] = str;
+	}
+	strss[a] = NULL;
+	return (strss);
 }
 
-int main(int argc, char *argv[], char *envp[]) {
-    char command[MAX_COMMAND_LENGTH];
-    int status;
-    
-    while (1) {
-        display_prompt();
-        read_command(command);
-        
-        // tokenize the command by semicolons (;)
-        char *token = strtok(command, ";");
-        while (token != NULL) {
-            status = execute_command(token, envp);
-            token = strtok(NULL, ";");
-        }
-    }
-    
-   
-	return 0;
+
+/**
+ * print_list - function to print all elements of list_t
+ * @h: first node
+ *
+ * Return: list size
+ */
+size_t print_list(const list_t *h)
+{
+	size_t a = 0;
+
+	while (h)
+	{
+		_puts(convert_number(h->num, 10, 0));
+		_putchar(':');
+		_putchar(' ');
+		_puts(h->str ? h->str : "(nil)");
+		_puts("\n");
+		h = h->next;
+		a++;
+	}
+	return (a);
+}
+
+
+/**
+ * node_starts_with - function to return node which starts prefix
+ * @node: list head
+ * @prefix: the string to match
+ * @c: next character
+ *
+ * Return: list_t
+ */
+list_t *node_starts_with(list_t *node, char *prefix, char c)
+{
+	char *pp = NULL;
+
+	while (node)
+	{
+		pp = starts_with(node->str, prefix);
+		if (pp && ((c == -1) || (*pp == c)))
+			return (node);
+		node = node->next;
+	}
+	return (NULL);
 }

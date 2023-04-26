@@ -1,123 +1,168 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/wait.h>
+#include "shell.h"
 
-#define MAX_COMMAND_LENGTH 100 // maximum length of a command
-#define MAX_ARGUMENTS 10 // maximum number of arguments in a command
-extern char **environ; // environment variables
+/**
+ * renumber_history - function to renumber history linked list
+ * @bret: passed struct
+ *
+ * Return: int
+ */
+int renumber_history(bret_t *bret)
+{
+	list_t *node = bret->history;
+	int a = 0;
 
-void display_prompt() {
-    printf("simple_shell> "); // display the prompt
+	while (node)
+	{
+		node->num = a++;
+		node = node->next;
+	}
+	return (bret->histcount = a);
 }
 
-void read_command(char *command) {
-    if (fgets(command, MAX_COMMAND_LENGTH, stdin) == NULL) {
-        printf("\n"); // print new line after end of file (Ctrl+D)
-        exit(0); // exit gracefully on end of file
-    }
+
+/**
+ * add_node - function to add a node to start in list
+ * @head: head node
+ * @str: field of node
+ * @num: node index
+ *
+ * Return: list size
+ */
+list_t *add_node(list_t **head, const char *str, int num)
+{
+	list_t *news_head;
+
+	if (!head)
+		return (NULL);
+	news_head = malloc(sizeof(list_t));
+	if (!news_head)
+		return (NULL);
+	_memset((void *)news_head, 0, sizeof(list_t));
+	news_head->num = num;
+	if (str)
+	{
+		news_head->str = _strdup(str);
+		if (!news_head->str)
+		{
+			free(news_head);
+			return (NULL);
+		}
+	}
+	news_head->next = *head;
+	*head = news_head;
+	return (news_head);
 }
 
-int execute_command(char *command, char **envp, char *current_directory) {
-    char *arguments[MAX_ARGUMENTS];
-    int num_arguments = 0;
-    
-    // tokenize the command into arguments
-    char *token = strtok(command, " \t\n");
-    while (token != NULL && num_arguments < MAX_ARGUMENTS - 1) {
-        arguments[num_arguments++] = token;
-        token = strtok(NULL, " \t\n");
-    }
-    arguments[num_arguments] = NULL; // set last argument to NULL for execvp
-    
-    // check if the command is the exit built-in
-    if (strcmp(arguments[0], "exit") == 0) {
-        exit(0); // exit gracefully
-    }
-    
-    // check if the command is the env built-in
-    if (strcmp(arguments[0], "env") == 0) {
-        char **env = envp;
-        while (*env != NULL) {
-            printf("%s\n", *env);
-            env++;
-        }
-        return 0;
-    }
-    
-    // check if the command is the cd built-in
-    if (strcmp(arguments[0], "cd") == 0) {
-        char *directory = arguments[1];
-        if (directory == NULL || strcmp(directory, "-") == 0) {
-            directory = getenv("HOME");
-        }
-        char previous_directory[MAX_COMMAND_LENGTH + 1];
-        if (getcwd(previous_directory, sizeof(previous_directory)) == NULL) {
-            perror("getcwd");
-            return 1;
-        }
-        if (chdir(directory) < 0) {
-            perror("chdir");
-            return 1;
-        }
-        if (setenv("PWD", directory, 1) < 0) {
-            perror("setenv");
-            return 1;
-        }
-        printf("%s\n", directory);
-        return 0;
-    }
-    
-    // check if the command exists in the PATH
-    char *path = getenv("PATH");
-    char *path_copy = strdup(path);
-    token = strtok(path_copy, ":");
-    while (token != NULL) {
-        char command_path[MAX_COMMAND_LENGTH + 1];
-        snprintf(command_path, sizeof(command_path), "%s/%s", token, arguments[0]);
-        if (access(command_path, X_OK) == 0) {
-            // fork a child process to execute the command
-            pid_t pid = fork();
-            if (pid < 0) {
-                perror("fork");
-                free(path_copy);
-                return 1;
-            } else if (pid == 0) {
-                // child process
-                if (execve(command_path, arguments, envp) < 0) {
-                    perror("execve");
-                    free(path_copy);
-                    exit(1);
-                }
-            } else {
-                // parent process
-                int status;
-                waitpid (pid, &status, 0);
-                free(path_copy);
-                return WIFEXITED(status) ? WEXITSTATUS(status) : 1;
-            }
-        }
-        token = strtok(NULL, ":");
-    }
-    free(path_copy);
-    
-    // command not found
-    printf("Command not found: %s\n", arguments[0]);
-    return 1;
+
+/**
+ * add_node_end - function to add node to end of list
+ * @head: head node
+ * @str: str field
+ * @num: node index
+ *
+ * Return: size of the list
+ */
+list_t *add_node_end(list_t **head, const char *str, int num)
+{
+	list_t *new_node, *node;
+
+	if (!head)
+	{
+		return (NULL);
+	}
+
+	node = *head;
+	new_node = malloc(sizeof(list_t));
+	if (!new_node)
+	{
+		return (NULL);
+	}
+	_memset((void *)new_node, 0, sizeof(list_t));
+	new_node->num = num;
+	if (str)
+	{
+		new_node->str = _strdup(str);
+		if (!new_node->str)
+		{
+			free(new_node);
+			return (NULL);
+		}
+	}
+	if (node)
+	{
+		while (node->next)
+		{
+			node = node->next;
+		}
+		node->next = new_node;
+	}
+	else
+	{
+		*head = new_node;
+	}
+	return (new_node);
 }
 
-int main() {
-    char command[MAX_COMMAND_LENGTH + 1];
-    char current_directory[MAX_COMMAND_LENGTH + 1];
-    int exit_status = 0;
-    
-    while (exit_status == 0) {
-        display_prompt();
-        read_command(command);
-        exit_status = execute_command(command, environ, current_directory);
-    }
-    
-    return exit_status;
+
+/**
+ * print_list_str - function to print only the str element of a list_t
+ * @h: first node
+ *
+ * Return: size of list_t
+ */
+size_t print_list_str(const list_t *h)
+{
+	size_t a = 0;
+
+	while (h)
+	{
+		_puts(h->str ? h->str : "(nil)");
+		_puts("\n");
+		h = h->next;
+		a++;
+	}
+	return (a);
 }
 
+
+
+/**
+ * klint_t - function to delete node at a particlar index
+ * @head: first node
+ * @index: index of node to be deleted
+ *
+ * Return: 1 or 0
+ */
+int klint_t(list_t **head, unsigned int index)
+{
+	list_t *node;
+	list_t *prev_node;
+	unsigned int a = 0;
+
+	if (!head || !*head)
+		return (0);
+
+	if (!index)
+	{
+		node = *head;
+		*head = (*head)->next;
+		free(node->str);
+		free(node);
+		return (1);
+	}
+	node = *head;
+	while (node)
+	{
+		if (a == index)
+		{
+			prev_node->next = node->next;
+			free(node->str);
+			free(node);
+			return (1);
+		}
+		a++;
+		prev_node = node;
+		node = node->next;
+	}
+	return (0);
+}

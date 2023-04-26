@@ -1,87 +1,152 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/wait.h>
+#include "shell.h"
 
-#define MAX_COMMAND_LENGTH 100 // maximum length of a command
-#define MAX_ARGUMENTS 10 // maximum number of arguments in a command
+/**
+ **_strncat - function which concatenates two strings
+ *@dest: first string
+ *@src: second string
+ *@n: the maximum amount of bytes to be used
+ *Return: string
+ */
+char *_strncat(char *dest, char *src, int n)
+{
+	int a, b;
+	char *c = dest;
 
-void display_prompt() {
-    printf("simple_shell> "); // display the prompt
+	a = 0;
+	b = 0;
+	while (dest[a] != '\0')
+	{
+		a++;
+	}
+	while (src[b] != '\0' && b < n)
+	{
+		dest[a] = src[b];
+		a++;
+		b++;
+	}
+	if (b < n)
+	{
+		dest[a] = '\0';
+	}
+	return (c);
 }
 
-void read_command(char *command) {
-    if (fgets(command, MAX_COMMAND_LENGTH, stdin) == NULL) {
-        printf("\n"); // print new line after end of file (Ctrl+D)
-        exit(0); // exit gracefully on end of file
-    }
+
+/**
+ **_strchr - function that locates a character in a string
+ *@s: string
+ *@c: character to identified
+ *Return: pointer tocharacter
+ */
+char *_strchr(char *s, char c)
+{
+	do {
+		if (*s == c)
+		{
+			return (s);
+		}
+	} while (*s++ != '\0');
+
+	return (NULL);
 }
 
-int execute_command(char *command, char **envp) {
-    char *arguments[MAX_ARGUMENTS];
-    int num_arguments = 0;
-    
-    // tokenize the command into arguments
-    char *token = strtok(command, " \t\n");
-    while (token != NULL && num_arguments < MAX_ARGUMENTS - 1) {
-        arguments[num_arguments++] = token;
-        token = strtok(NULL, " \t\n");
-    }
-    arguments[num_arguments] = NULL; // set last argument to NULL for execvp
-    
-    // check if the command exists in the PATH
-    char *path = getenv("PATH");
-    char *path_copy = strdup(path);
-    token = strtok(path_copy, ":");
-    while (token != NULL) {
-        char command_path[MAX_COMMAND_LENGTH + 1];
-        snprintf(command_path, sizeof(command_path), "%s/%s", token, arguments[0]);
-        if (access(command_path, X_OK) == 0) {
-            // fork a child process to execute the command
-            pid_t pid = fork();
-            if (pid < 0) {
-                perror("fork");
-                free(path_copy);
-                return 1;
-            } else if (pid == 0) {
-                // child process
-                if (execve(command_path, arguments, envp) < 0) {
-                    perror("execve");
-                    free(path_copy);
-                    exit(1);
-                }
-            } else {
-                // parent process
-                int status;
-                waitpid(pid, &status, 0); // wait for child process to finish
-                free(path_copy);
-                if (WIFEXITED(status)) {
-                    return WEXITSTATUS(status);
-                } else {
-                    return 1;
-                }
-            }
-        }
-        token = strtok(NULL, ":");
-    }
-    free(path_copy);
-    
-    // command not found in the PATH
-    printf("Command not found: %s\n", arguments[0]);
-    return 1;
+
+/**
+ * input_buf - function for buffers chained commands
+ * @bret: passed in struct
+ * @buf: buffer
+ * @len: len var
+ *
+ * Return: bytes that have be read
+ */
+ssize_t input_buf(bret_t *bret, char **buf, size_t *len)
+{
+	ssize_t a = 0;
+	size_t b = 0;
+
+	if (!*len)
+	{
+		free(*buf);
+		*buf = NULL;
+		signal(SIGINT, sigintHandler);
+		#if USE_GETLINE
+		a = getline(buf, &b, stdin);
+		#else
+		a = _getline(bret, buf, &b);
+		#endif
+		if (a > 0)
+		{
+			if ((*buf)[a - 1] == '\n')
+			{
+				(*buf)[a - 1] = '\0';
+				a--;
+			}
+			bret->linecount_flag = 1;
+			remove_comments(*buf);
+			klint_x_list(bret, *buf, bret->histcount++);
+			{
+				*len = a;
+				bret->cmd_buf = buf;
+			}
+		}
+	}
+	return (a);
 }
 
-int main(int argc, char *argv[], char *envp[]) {
-    char command[MAX_COMMAND_LENGTH];
-    int status;
-    
-    while (1) {
-        display_prompt();
-        read_command(command);
-        status = execute_command(command, envp);
-    }
-    
-    return 0;
+
+/**
+ * get_input - function that gets a line minus the newline
+ * @bret: passed struct
+ *
+ * Return: bytes tat is read
+ */
+ssize_t get_input(bret_t *bret)
+{
+	static char *buf;
+	static size_t a, b, c;
+	ssize_t d = 0;
+	char **e = &(bret->arg), *f;
+
+	_putchar(BUF_FLUSH);
+	d = input_buf(bret, &buf, &c);
+	if (d == -1)
+		return (-1);
+	if (c)
+	{
+		b = a;
+		f = buf + a;
+
+		klint_p(bret, buf, &b, a, c);
+		while (b < c)
+		{
+			if (is_chain(bret, buf, &b))
+				break;
+			b++;
+		}
+
+		a = b + 1;
+		if (a >= c)
+		{
+			a = c = 0;
+			bret->cmd_buf_type = CMD_NORM;
+		}
+
+		*e = f;
+		return (_strlen(f));
+	}
+
+	*e = buf;
+	return (d);
 }
 
+
+/**
+ * _myenv - function that prints the current directory
+ * @bret: passed argument
+ * Return: 0
+ */
+int _myenv(bret_t *bret)
+{
+	print_list_str(bret->env);
+	return (0);
+}

@@ -1,128 +1,167 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/wait.h>
+#include "shell.h"
 
-#define MAX_COMMAND_LENGTH 100 // maximum length of a command
-#define MAX_ARGUMENTS 10 // maximum number of arguments in a command
-
-extern char **environ; // global variable to access the environment
-
-void display_prompt() {
-    printf("simple_shell> "); // display the prompt
+/**
+ * free_bret - function to free bret_t struct field
+ * @bret: passed struct
+ * @all: 1 on freeing fiellds
+ * Return: void
+ */
+void free_bret(bret_t *bret, int all)
+{
+	ffree(bret->argv);
+	bret->argv = NULL;
+	bret->path = NULL;
+	if (all)
+	{
+		if (!bret->cmd_buf)
+		{
+			free(bret->arg);
+		}
+		if (bret->env)
+		{
+			free_list(&(bret->env));
+		}
+		if (bret->history)
+		{
+			free_list(&(bret->history));
+		}
+		if (bret->alias)
+		{
+			free_list(&(bret->alias));
+		}
+		ffree(bret->environ);
+		bret->environ = NULL;
+		klint_f((void **)bret->cmd_buf);
+		if (bret->readfd > 2)
+		{
+			close(bret->readfd);
+		}
+		_putchar(BUF_FLUSH);
+	}
 }
 
-void read_command(char *command) {
-    if (fgets(command, MAX_COMMAND_LENGTH, stdin) == NULL) {
-        printf("\n"); // print new line after end of file (Ctrl+D)
-        exit(0); // exit gracefully on end of file
-    }
+
+/**
+ * get_history_file - function to get history file
+ * @bret: passed struct
+ *
+ * Return: allocated string
+ */
+char *get_history_file(bret_t *bret)
+{
+	char *buff, *dirr;
+
+	dirr = _getenv(bret, "HOME=");
+	if (!dirr)
+		return (NULL);
+	buff = malloc(sizeof(char) * (_strlen(dirr) + _strlen(HIST_FILE) + 2));
+	if (!buff)
+		return (NULL);
+	buff[0] = 0;
+	_strcpy(buff, dirr);
+	_strcat(buff, "/");
+	_strcat(buff, HIST_FILE);
+	return (buff);
 }
 
-int execute_command(char *command, char **envp) {
-    char *arguments[MAX_ARGUMENTS];
-    int num_arguments = 0;
-    
-    // tokenize the command into arguments
-    char *token = strtok(command, " \t\n");
-    while (token != NULL && num_arguments < MAX_ARGUMENTS - 1) {
-        arguments[num_arguments++] = token;
-        token = strtok(NULL, " \t\n");
-    }
-    arguments[num_arguments] = NULL; // set last argument to NULL for execvp
-    
-    // check if the command is the exit built-in
-    if (strcmp(arguments[0], "exit") == 0) {
-        exit(0); // exit gracefully
-    }
-    // check if the command is the env built-in
-    else if (strcmp(arguments[0], "env") == 0) {
-        // print the current environment
-        for (int i = 0; envp[i] != NULL; i++) {
-            printf("%s\n", envp[i]);
-        }
-        return 0;
-    }
-    // check if the command is the setenv built-in
-    else if (strcmp(arguments[0], "setenv") == 0) {
-        // check for correct number of arguments
-        if (num_arguments != 3) {
-            fprintf(stderr, "Usage: setenv VARIABLE VALUE\n");
-            return 1;
-        }
-        // set or modify the environment variable
-        if (setenv(arguments[1], arguments[2], 1) != 0) {
-            perror("setenv");
-            return 1;
-        }
-        return 0;
-    }
-    // check if the command is the unsetenv built-in
-    else if (strcmp(arguments[0], "unsetenv") == 0) {
-        // check for correct number of arguments
-        if (num_arguments != 2) {
-            fprintf(stderr, "Usage: unsetenv VARIABLE\n");
-            return 1;
-        }
-        // remove the environment variable
-        if (unsetenv(arguments[1]) != 0) {
-            perror("unsetenv");
-            return 1;
-        }
-        return 0;
-    }
-    
-    // check if the command exists in the PATH
-    char *path = getenv("PATH");
-    char *path_copy = strdup(path);
-    token = strtok(path_copy, ":");
-    while (token != NULL) {
-        char command_path[MAX_COMMAND_LENGTH + 1];
-        snprintf(command_path, sizeof(command_path), "%s/%s", token, arguments[0]);
-        if (access(command_path, X_OK) == 0) {
-            // fork a child process to execute the command
-            pid_t pid = fork();
-            if (pid < 0) {
-                perror("fork");
-                free(path_copy);
-                return 1;
-            } else if (pid == 0) {
-                // child process
-                execv(command_path, arguments);
-                // if execv returns, it failed
-                perror(arguments[0]);
-                free(path_copy);
-                exit(1);
-            } else {
-                // parent process
-                int status;
-                waitpid(pid, &status, 0); // wait for child to finish
-                free(path_copy);
-                return WEXITSTATUS(status);
-            }
-        }
-        token = strtok(NULL, ":");
-    }
-    free(path_copy);
-    
-    // command not found
-    fprintf(stderr, "Command not found: %s\n", arguments[0]);
-    return 1;
+
+/**
+ * klint_v - function to create or append to an existing file
+ * @bret: passed struct
+ *
+ * Return: 1 or -1
+ */
+int klint_v(bret_t *bret)
+{
+	ssize_t fdr;
+	char *filenames = get_history_file(bret);
+	list_t *node = NULL;
+
+	if (!filenames)
+		return (-1);
+
+	fdr = open(filenames, O_CREAT | O_TRUNC | O_RDWR, 0644);
+	free(filenames);
+	if (fdr == -1)
+		return (-1);
+	for (node = bret->history; node; node = node->next)
+	{
+		_klint_e(node->str, fdr);
+		_putfd('\n', fdr);
+	}
+	_putfd(BUF_FLUSH, fdr);
+	close(fdr);
+	return (1);
 }
 
-int main() {
-    char command[MAX_COMMAND_LENGTH + 1];
-    
-    while (1) {
-        display_prompt();
-        read_command(command);
-        int result = execute_command(command, environ);
-        if (result != 0) {
-            fprintf(stderr, "Command failed with status %d\n", result);
-        }
-    }
-    
-    return 0;
+
+/**
+ * klint_w - reads history from file
+ * @bret: the parameter struct
+ *
+ * Return: histcount on success, 0 otherwise
+ */
+int klint_w(bret_t *bret)
+{
+	int a, last = 0, count = 0;
+	ssize_t fdr, rdlen, fsize = 0;
+	struct stat st;
+	char *buf = NULL, *filenames = get_history_file(bret);
+
+	if (!filenames)
+		return (0);
+
+	fdr = open(filenames, O_RDONLY);
+	free(filenames);
+	if (fdr == -1)
+		return (0);
+	if (!fstat(fdr, &st))
+		fsize = st.st_size;
+	if (fsize < 2)
+		return (0);
+	buf = malloc(sizeof(char) * (fsize + 1));
+	if (!buf)
+		return (0);
+	rdlen = read(fdr, buf, fsize);
+	buf[fsize] = 0;
+	if (rdlen <= 0)
+		return (free(buf), 0);
+	close(fdr);
+	for (a = 0; a < fsize; a++)
+		if (buf[a] == '\n')
+		{
+			buf[a] = 0;
+			klint_x_list(bret, buf + last, count++);
+			last = a + 1;
+		}
+	if (last != a)
+		klint_x_list(bret, buf + last, count++);
+	free(buf);
+	bret->histcount = count;
+	while (bret->histcount-- >= HIST_MAX)
+		klint_t(&(bret->history), 0);
+	renumber_history(bret);
+	return (bret->histcount);
 }
 
+
+/**
+ * klint_x_list - function to add entry to history
+ * @bret: passed struct
+ * @buf: passed buffer
+ * @linecount: history linecount
+ *
+ * Return: 0
+ */
+int klint_x_list(bret_t *bret, char *buf, int linecount)
+{
+	list_t *node = NULL;
+
+	if (bret->history)
+		node = bret->history;
+	add_node_end(&node, buf, linecount);
+
+	if (!bret->history)
+		bret->history = node;
+	return (0);
+}

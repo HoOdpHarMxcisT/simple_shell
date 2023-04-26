@@ -1,97 +1,137 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/wait.h>
+#include "shell.h"
 
-#define MAX_COMMAND_LENGTH 100 // maximum length of a command
-#define MAX_ARGUMENTS 10 // maximum number of arguments in a command
-
-void display_prompt() {
-    printf("simple_shell> "); // display the prompt
+/**
+ * get_environ - function to return string copy of env
+ * @bret: passed struct
+ * Return: 0
+ */
+char **get_environ(bret_t *bret)
+{
+	if (!bret->environ || bret->env_changed)
+	{
+		bret->environ = list_to_strings(bret->env);
+		bret->env_changed = 0;
+	}
+	return (bret->environ);
 }
 
-void read_command(char *command) {
-    if (fgets(command, MAX_COMMAND_LENGTH, stdin) == NULL) {
-        printf("\n"); // print new line after end of file (Ctrl+D)
-        exit(0); // exit gracefully on end of file
-    }
+
+/**
+ * _unsetenv - function to remove an var from env
+ * @bret: passed struct
+ * @var: passed string
+ * Return: 0
+ */
+int _unsetenv(bret_t *bret, char *var)
+{
+	list_t *node = bret->env;
+	size_t a = 0;
+	char *b;
+
+	if (!node || !var)
+		return (0);
+
+	while (node)
+	{
+		b = starts_with(node->str, var);
+		if (b && *b == '=')
+		{
+			bret->env_changed = klint_t(&(bret->env), a);
+			a = 0;
+			node = bret->env;
+			continue;
+		}
+		node = node->next;
+		a++;
+	}
+	return (bret->env_changed);
 }
 
-int execute_command(char *command, char **envp) {
-    char *arguments[MAX_ARGUMENTS];
-    int num_arguments = 0;
-    
-    // tokenize the command into arguments
-    char *token = strtok(command, " \t\n");
-    while (token != NULL && num_arguments < MAX_ARGUMENTS - 1) {
-        arguments[num_arguments++] = token;
-        token = strtok(NULL, " \t\n");
-    }
-    arguments[num_arguments] = NULL; // set last argument to NULL for execvp
-    
-    // check if the command is the built-in exit command
-    if (strcmp(arguments[0], "exit") == 0) {
-        // check if an argument is provided for the exit status
-        if (num_arguments == 2) {
-            int status = atoi(arguments[1]);
-            exit(status); // exit the shell with the provided status
-        } else {
-            exit(0); // exit the shell gracefully with status 0
-        }
-    }
-    
-    // check if the command exists in the PATH
-    char *path = getenv("PATH");
-    char *path_copy = strdup(path);
-    token = strtok(path_copy, ":");
-    while (token != NULL) {
-        char command_path[MAX_COMMAND_LENGTH + 1];
-        snprintf(command_path, sizeof(command_path), "%s/%s", token, arguments[0]);
-        if (access(command_path, X_OK) == 0) {
-            // fork a child process to execute the command
-            pid_t pid = fork();
-            if (pid < 0) {
-                perror("fork");
-                free(path_copy);
-                return 1;
-            } else if (pid == 0) {
-                // child process
-                if (execve(command_path, arguments, envp) < 0) {
-                    perror("execve");
-                    free(path_copy);
-                    exit(1);
-                }
-            } else {
-                // parent process
-                int status;
-                waitpid(pid, &status, 0); // wait for child process to finish
-                free(path_copy);
-                if (WIFEXITED(status)) {
-                    return WEXITSTATUS(status);
-                } else {
-                    return 1;
-                }
-            }
-        }
-        token = strtok(NULL, ":");
-    }
-    free(path_copy);
-    
-    // command not found in the PATH
-    printf("Command not found: %s\n", arguments[0]);
-    return 1;
+
+/**
+ * _setenv - function to initialize new or modify existing env variable
+ * @bret: passed struct
+ * @var: variable property
+ * @value: variable value
+ * Return: 0
+ */
+int _setenv(bret_t *bret, char *var, char *value)
+{
+	char *b = NULL;
+	list_t *node;
+	char *p;
+
+	if (!var || !value)
+		return (0);
+
+	b = malloc(_strlen(var) + _strlen(value) + 2);
+	if (!b)
+		return (1);
+	_strcpy(b, var);
+	_strcat(b, "=");
+	_strcat(b, value);
+	node = bret->env;
+	while (node)
+	{
+		p = starts_with(node->str, var);
+		if (p && *p == '=')
+		{
+			free(node->str);
+			node->str = b;
+			bret->env_changed = 1;
+			return (0);
+		}
+		node = node->next;
+	}
+	add_node_end(&(bret->env), b, 0);
+	free(b);
+	bret->env_changed = 1;
+	return (0);
 }
 
-int main(int argc, char *argv[], char *envp[]) {
-    char command[MAX_COMMAND_LENGTH];
-    int status;
-    
-    while (1) {
-        display_prompt();
-        read_command(command);
-        status = execute_command(command, envp);
-    }
-    
-    return 0;
+
+/**
+ * clear_bret - function to clear bret_t
+ * @bret: passed struct
+ * Return: void
+ */
+void clear_bret(bret_t *bret)
+{
+	bret->arg = NULL;
+	bret->argv = NULL;
+	bret->path = NULL;
+	bret->argc = 0;
+}
+
+
+/**
+ * set_bret - function to initialize bret_t
+ * @bret: passed struct
+ * @av: vector of argument
+ * Return: void
+ */
+void set_bret(bret_t *bret, char **av)
+{
+	int a = 0;
+
+	bret->fname = av[0];
+	if (bret->arg)
+	{
+		bret->argv = strtow(bret->arg, " \t");
+		if (!bret->argv)
+		{
+			bret->argv = malloc(sizeof(char *) * 2);
+			if (bret->argv)
+			{
+				bret->argv[0] = _strdup(bret->arg);
+				bret->argv[1] = NULL;
+			}
+		}
+		for (a = 0; bret->argv && bret->argv[a]; a++)
+			;
+		bret->argc = a;
+
+		klint_o(bret);
+		klint_q(bret);
+	}
 }

@@ -1,103 +1,112 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/wait.h>
+#include "shell.h"
 
-#define MAX_COMMAND_LENGTH 100 // maximum length of a command
-#define MAX_ARGUMENTS 10 // maximum number of arguments in a command
-extern char **environ; // environment variables
+/**
+ * _eputchar - function that writes the a char to stderr
+ * @c: passed in char
+ *
+ * Return: 1 or -1
+ */
+int _eputchar(char c)
+{
+	static char b[WRITE_BUF_SIZE];
+	static int a;
 
-void display_prompt() {
-    printf("simple_shell> "); // display the prompt
+	if (c == BUF_FLUSH || a >= WRITE_BUF_SIZE)
+	{
+		write(2, b, a);
+		a = 0;
+	}
+	if (c != BUF_FLUSH)
+		b[a++] = c;
+	return (1);
 }
 
-void read_command(char *command) {
-    if (fgets(command, MAX_COMMAND_LENGTH, stdin) == NULL) {
-        printf("\n"); // print new line after end of file (Ctrl+D)
-        exit(0); // exit gracefully on end of file
-    }
+
+/**
+ * _putfd - function to write character to fd
+ * @c: char to write
+ * @fd: filedescriptor written to
+ *
+ * Return: 1 or -1
+ */
+int _putfd(char c, int fd)
+{
+	static int a;
+	static char b[WRITE_BUF_SIZE];
+
+	if (c == BUF_FLUSH || a >= WRITE_BUF_SIZE)
+	{
+		write(fd, b, a);
+		a = 0;
+	}
+	if (c != BUF_FLUSH)
+		b[a++] = c;
+	return (1);
 }
 
-int execute_command(char *command, char **envp) {
-    char *arguments[MAX_ARGUMENTS];
-    int num_arguments = 0;
-    
-    // tokenize the command into arguments
-    char *token = strtok(command, " \t\n");
-    while (token != NULL && num_arguments < MAX_ARGUMENTS - 1) {
-        arguments[num_arguments++] = token;
-        token = strtok(NULL, " \t\n");
-    }
-    arguments[num_arguments] = NULL; // set last argument to NULL for execvp
-    
-    // check if the command is the exit built-in
-    if (strcmp(arguments[0], "exit") == 0) {
-        exit(0); // exit gracefully
-    }
-    
-    // check if the command is the env built-in
-    if (strcmp(arguments[0], "env") == 0) {
-        char **env = envp;
-        while (*env != NULL) {
-            printf("%s\n", *env);
-            env++;
-        }
-        return 0;
-    }
-    
-    // check if the command exists in the PATH
-    char *path = getenv("PATH");
-    char *path_copy = strdup(path);
-    token = strtok(path_copy, ":");
-    while (token != NULL) {
-        char command_path[MAX_COMMAND_LENGTH + 1];
-        snprintf(command_path, sizeof(command_path), "%s/%s", token, arguments[0]);
-        if (access(command_path, X_OK) == 0) {
-            // fork a child process to execute the command
-            pid_t pid = fork();
-            if (pid < 0) {
-                perror("fork");
-                free(path_copy);
-                return 1;
-            } else if (pid == 0) {
-                // child process
-                if (execve(command_path, arguments, envp) < 0) {
-                    perror("execve");
-                    free(path_copy);
-                    exit(1);
-                }
-            } else {
-                // parent process
-                int status;
-                waitpid(pid, &status, 0); // wait for child process to finish
-                free(path_copy);
-                if (WIFEXITED(status)) {
-                    return WEXITSTATUS(status);
-                } else {
-                    return 1;
-                }
-            }
-        }
-        token = strtok(NULL, ":");
-    }
-    free(path_copy);
-    
-    // command not found in the PATH
-    printf("Command not found: %s\n", arguments[0]);
-    return 1;
+
+/**
+ * _klint_e - functiion to print input string
+ * @str: string to print
+ * @fd: filedescriptor
+ *
+ * Return: number of characters put into fd
+ */
+int _klint_e(char *str, int fd)
+{
+	int a = 0;
+
+	if (!str)
+		return (0);
+	while (*str)
+	{
+		a += _putfd(*str++, fd);
+	}
+	return (a);
 }
 
-int main(int argc, char *argv[], char *envp[]) {
-    char command[MAX_COMMAND_LENGTH];
-    int status;
-    
-    while (1) {
-        display_prompt();
-        read_command(command);
-        status = execute_command(command, envp);
-    }
-    
-    return 0;
+
+/**
+ * _erratoi - function to convert string to integer
+ * @s: string to convert
+ * Return: 0 or -1
+ */
+int _erratoi(char *s)
+{
+	int a = 0;
+	unsigned long int integer = 0;
+
+	if (*s == '+')
+		s++;
+	for (a = 0;  s[a] != '\0'; a++)
+	{
+		if (s[a] >= '0' && s[a] <= '9')
+		{
+			integer *= 10;
+			integer += (s[a] - '0');
+			if (integer > INT_MAX)
+				return (-1);
+		}
+		else
+			return (-1);
+	}
+	return (integer);
 }
 
+
+/**
+ * print_error - function to print error message
+ * @bret: passed struct
+ * @estr: error type
+ * Return: 0 or -1
+ */
+void print_error(bret_t *bret, char *estr)
+{
+	_kro(bret->fname);
+	_kro(": ");
+	print_d(bret->line_count, STDERR_FILENO);
+	_kro(": ");
+	_kro(bret->argv[0]);
+	_kro(": ");
+	_kro(estr);
+}

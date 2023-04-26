@@ -124,4 +124,4 @@ int unset_alias(bret_t *bret, char *str)
 int klint(bret_t *bret)
 {
 	return (isatty(STDIN_FILENO) && bret->readfd <= 2);
-}}
+}

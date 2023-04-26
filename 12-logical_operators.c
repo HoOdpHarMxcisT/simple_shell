@@ -1,115 +1,131 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/wait.h>
+#include "shell.h"
 
-#define MAX_COMMAND_LENGTH 100 // maximum length of a command
-#define MAX_ARGUMENTS 10 // maximum number of arguments in a command
+/**
+ * get_node_index - function to get index of node
+ * @head: list head
+ * @node: node
+ *
+ * Return: node index
+ */
+ssize_t get_node_index(list_t *head, list_t *node)
+{
+	size_t a = 0;
 
-void display_prompt() {
-    printf("simple_shell> "); // display the prompt
+	while (head)
+	{
+		if (head == node)
+			return (a);
+		head = head->next;
+		a++;
+	}
+	return (-1);
 }
 
-void read_command(char *command) {
-    if (fgets(command, MAX_COMMAND_LENGTH, stdin) == NULL) {
-        printf("\n"); // print new line after end of file (Ctrl+D)
-        exit(0); // exit gracefully on end of file
-    }
+
+/**
+ * klint_c - function to fork execution thread to run command
+ * @bret: passed struct
+ *
+ * Return: void
+ */
+void klint_c(bret_t *bret)
+{
+	pid_t good;
+
+	good = fork();
+	if (good == -1)
+	{
+		perror("Error:");
+		return;
+	}
+	if (good == 0)
+	{
+		if (execve(bret->path, bret->argv, get_environ(bret)) == -1)
+		{
+			free_bret(bret, 1);
+			if (errno == EACCES)
+			{
+				exit(126);
+			}
+			exit(1);
+		}
+	}
+	else
+	{
+		wait(&(bret->status));
+		if (WIFEXITED(bret->status))
+		{
+			bret->status = WEXITSTATUS(bret->status);
+			if (bret->status == 126)
+			{
+				print_error(bret, "Permission denied\n");
+			}
+		}
+	}
 }
 
-int execute_command(char *command, char **envp) {
-    char *arguments[MAX_ARGUMENTS];
-    int num_arguments = 0;
-    int and_operator = 0; // flag to check if "&&" operator is present
-    int or_operator = 0; // flag to check if "||" operator is present
-    
-    // tokenize the command into arguments
-    char *token = strtok(command, " \t\n");
-    while (token != NULL && num_arguments < MAX_ARGUMENTS - 1) {
-        if (strcmp(token, "&&") == 0) {
-            and_operator = 1;
-        } else if (strcmp(token, "||") == 0) {
-            or_operator = 1;
-        } else {
-            arguments[num_arguments++] = token;
-        }
-        token = strtok(NULL, " \t\n");
-    }
-    arguments[num_arguments] = NULL; // set last argument to NULL for execvp
-    
-    // check if the command is the exit built-in
-    if (strcmp(arguments[0], "exit") == 0) {
-        exit(0); // exit gracefully
-    }
-    
-    // check if the command is the env built-in
-    if (strcmp(arguments[0], "env") == 0) {
-        char **env = envp;
-        while (*env != NULL) {
-            printf("%s\n", *env);
-            env++;
-        }
-        return 0;
-    }
-    
-    // check if the command exists in the PATH
-    char *path = getenv("PATH");
-    char *path_copy = strdup(path);
-    token = strtok(path_copy, ":");
-    while (token != NULL) {
-        char command_path[MAX_COMMAND_LENGTH + 1];
-        snprintf(command_path, sizeof(command_path), "%s/%s", token, arguments[0]);
-        if (access(command_path, X_OK) == 0) {
-            // fork a child process to execute the command
-            pid_t pid = fork();
-            if (pid < 0) {
-                perror("fork");
-                free(path_copy);
-                return 1;
-            } else if (pid == 0) {
-                // child process
-                if (execve(command_path, arguments, envp) < 0) {
-                    perror("execve");
-                    free(path_copy);
-                    exit(1);
-                }
-            } else {
-                // parent process
-                int status;
-                waitpid(pid, &status, 0); // wait for child process to finish
-                free(path_copy);
-                if (WIFEXITED(status)) {
-                    int exit_status = WEXITSTATUS(status);
-                    if (and_operator && exit_status != 0) {
-                        return exit_status;
-                    } else if (or_operator && exit_status == 0) {
-                        return exit_status;
-                    } else if (!and_operator && !or_operator) {
-                        return exit_status;
-                    }
-               
-                }
-            }
-        }
-        token = strtok(NULL, ":");
-    }
-    free(path_copy);
-    printf("Command not found: %s\n", arguments[0]);
-    return 1;
+
+/**
+ * _strlen - function to return length of string
+ * @s: passed string
+ *
+ * Return: string length
+ */
+int _strlen(char *s)
+{
+	int a = 0;
+
+	if (!s)
+		return (0);
+
+	while (*s++)
+		a++;
+	return (a);
 }
 
-int main(int argc, char *argv[], char *envp[]) {
-    char command[MAX_COMMAND_LENGTH + 1];
-    
-    while (1) {
-        display_prompt();
-        read_command(command);
-        int exit_status = execute_command(command, envp);
-        if (exit_status != 0) {
-            printf("Command exited with status: %d\n", exit_status);
-        }
-    }
-    
-    return 0;
+
+/**
+ * _strcmp - function to execute lexicogarphic comparison of two strings
+ * @s1: first strang
+ * @s2: second strang
+ *
+ * Return: -ve, 0 or +ve
+ */
+int _strcmp(char *s1, char *s2)
+{
+	while (*s1 && *s2)
+	{
+		if (*s1 != *s2)
+		{
+			return (*s1 - *s2);
+		}
+		s1++;
+		s2++;
+	}
+	if (*s1 == *s2)
+	{
+		return (0);
+	}
+	else
+	{
+		return (*s1 < *s2 ? -1 : 1);
+	}
+}
+
+
+/**
+ * klint_f - function to free pointer and NULLs address
+ * @ptr: pointer to free
+ *
+ * Return: 1 or 0
+ */
+int klint_f(void **ptr)
+{
+	if (ptr && *ptr)
+	{
+		free(*ptr);
+		*ptr = NULL;
+		return (1);
+	}
+	return (0);
 }
