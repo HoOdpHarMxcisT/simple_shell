@@ -1,26 +1,11 @@
-#include <stdio.h>
-
+#include<stdio.h>
 /**
- * print_rev - imprime en reversa
- * @s: string
- * return: 0
- */
-void print_rev(char *s)
+* main - Entry point
+*
+* Return: Always 0 (Success)
+*/
+int main(void)
 {
-	int longi = 0;
-	int o;
-
-	while (*s != '\0')
-	{
-		longi++;
-		s++;
-	}
-	s--;
-	for (o = longi; o > 0; o--)
-	{
-		_putchar(*s);
-		s--;
-	}
-
-	_putchar('\n');
+	printf("with proper grammar, but the outcome is a piece of art,\n");
+	return (0);
 }
