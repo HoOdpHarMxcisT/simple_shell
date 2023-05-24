@@ -40,7 +40,6 @@ int count_words(char *str, char *delim);
 char *read_line(int n);
 char **parse_str(char *str, char *delim, int n);
 char *_strdup(char *s);
-char *_getenv(const char *name);
 char **_paths(void);
 char *_finder(char **paths, char *cmd);
 char *pathfinder(char **arg);
