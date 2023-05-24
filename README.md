@@ -29,3 +29,7 @@ Compiler: gcc
 <a href="https://github.com" target="_blank"> <img height="" src="https://img.shields.io/static/v1?label=&message=GitHub&color=181717&logo=GitHub&logoColor=f2f2f2&labelColor=2F333A" alt="Github"></a>
 
 Style guidelines: [Betty style](https://github.com/holbertonschool/Betty/wiki)
+
+> # Authors
+>> ___[RATSHILI STANLEY](https://github.com/RSstanley)___
+> > > ___[CLEMENT MPHETHI](https://github.com/HoOdpHarMxcisT)___
