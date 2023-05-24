@@ -3,9 +3,7 @@
 
 /**
  * _getenv - prts env to standard output
- *
- * @env: enviroment
- *
+ * Return: Always 0
  */
 
 void _getenv(char **env)
