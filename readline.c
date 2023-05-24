@@ -1,6 +1,6 @@
 #include "shell.h"
- * read_line - reads input from stdin
- * @status: current error status number
+ /** read_line reads input from stdin
+ * status: current error status number
  * Return: number of characters read
  */
 char *read_line(int status)

@@ -52,7 +52,7 @@ int _strlen(char *str)
  *
  * Return: negative, zero, or positive
  */
-int _strncmp(char *s1, char *s2, int n)
+int strcmp(char *s1, char *s2, int n)
 {
 	int index = 0;
 	int sum = 0;

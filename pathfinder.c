@@ -19,7 +19,7 @@ char *_getenv(const char *name)
 		exit(ENOMEM);
 	}
 
-	_strncpy(new_name, (char *)name, 0, len_name);
+	_strcpy(new_name, (char *)name, 0, len_name);
 	_strcat(new_name, "=");
 
 	len_new_name = _strlen(new_name);
