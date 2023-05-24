@@ -1,4 +1,4 @@
-#include "shell.h"
+#include "vrshell.h"
 /**
   * _realloc - reallocate memory
   * @ptr: pointer
