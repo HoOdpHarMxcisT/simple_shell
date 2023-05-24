@@ -1,8 +1,8 @@
 #include "shell.h"
-int lsh_cd(char **args);
 int lsh_help(char **args);
-int lsh_exit(char **args);
+int lsh_cd(char **args);
 int lsh_ctrld(char **args);
+int lsh_exit(char **args);
 
 /*
  * List of builtin commands, followed by their corresponding functions.
