@@ -1,8 +1,9 @@
 #include "shell.h"
 /**
- * main - Main arguments functions
+ * main - Main argument functions
+ *
  * @ac: Count of argumnents
- * @av: Arguments
+ * 
  * @env: Environment
  * Return: _exit = 0.
  */
