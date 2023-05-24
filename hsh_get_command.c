@@ -1,7 +1,8 @@
 #include "shell.h"
 /**
- * _getline_command -  GEts inputs
- * Return: The input.
+ * 
+ * Return: The input
+ *
  */
 
 char *_getline_command(void)
