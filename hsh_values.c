@@ -1,8 +1,6 @@
 #include "shell.h"
 /**
- * _values_path - Separate the path in new strings.
- * @arg: Command input of user.
- * @env: Enviroment.
+ * _values_path - Separate the path in all the new strings
  * Return: Pointer to strings.
  */
 int _values_path(char **arg, char **env)
