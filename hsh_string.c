@@ -2,10 +2,6 @@
 
 /**
  * _strcat - ncatenates two strings
- *
- * @dest: Destination string
- *
- * @src: Origin string
  * Return: Always 0
  */
 
