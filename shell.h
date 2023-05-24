@@ -9,6 +9,7 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <signal.h>
 
 int lsh_ctrld(char **args);
 int lsh_cd(char **args);
@@ -30,5 +31,24 @@ char **tokenize(char *lineptr);
 void _exit_command(char **args, char *lineptr, int _exit);
 int _fork_fun(char **arg, char **av, char **env,
 char *lineptr, int np, int c);
+
+int stderr_pc(char c);
+int checkbi(char **tokens);
+int runbi(char **tokens);
+int executearg(char **arg);
+int count_words(char *str, char *delim);
+char *read_line(int n);
+char **parse_str(char *str, char *delim, int n);
+char *_strdup(char *s);
+char *_getenv(const char *name);
+char **_paths(void);
+char *_finder(char **paths, char *cmd);
+char *pathfinder(char **arg);
+char *pstart(char *allpaths);
+char *pend(char *allpaths);
+void *_realloc(void *ptr, unsigned int old_size, unsigned int new_size);
+void free_dptr(char **ptr);
+void badcom(int errorstatus, int count, char *cmd);
+void print_number(int n);
 
 #endif /* SHELL_H */

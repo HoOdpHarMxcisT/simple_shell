@@ -1,4 +1,4 @@
-#include "vrshell.h"
+#include "shell.h"
 /**
  * _getenv - get environment variable
  * @name: string to search through

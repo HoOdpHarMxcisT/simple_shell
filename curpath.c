@@ -1,4 +1,4 @@
-#include "vrshell.h"
+#include "shell.h"
 /**
  * pstart - append current dir to beginning of path env
  * @allpaths: the current path env
