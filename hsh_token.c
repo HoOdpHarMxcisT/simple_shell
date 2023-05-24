@@ -1,8 +1,8 @@
 #include "shell.h"
 /**
  * tokenize - tokenizes a stirng
- * @lineptr: what the user inputed
- * Return: a ptr to arr of ptrs
+ * @lineptr: what the user has inputed
+ * Return: a pointer to array of p0inters
  */
 
 char **tokenize(char *lineptr)
