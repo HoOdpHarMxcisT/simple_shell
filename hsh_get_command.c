@@ -1,6 +1,5 @@
 #include "shell.h"
-/**
- * 
+/** 
  * Return: The input
  *
  */
@@ -20,4 +19,4 @@ char *_getline_command(void)
 	}
 
 	return (lineptr);
-}
+	}

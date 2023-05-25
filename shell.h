@@ -21,6 +21,7 @@ int _strlen(char *s);
 char *_strcpy(char *dest, char *src);
 char *_strcat(char *dest, char *src);
 int _putchar(char c);
+int main(int ac, char **av, char **env);
 
 char *_get_path(char **env);
 int _values_path(char **arg, char **env);
