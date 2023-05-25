@@ -4,7 +4,7 @@
  * Return: value of PATH
  */
 
-char *_get_path(char **env);
+char *_get_path(char **env)
 {
 	size_t index = 0, var = 0, count = 5;
 	char *path = NULL;

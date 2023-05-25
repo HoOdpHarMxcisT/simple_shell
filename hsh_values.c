@@ -3,7 +3,7 @@
  * _values_path - Separate the path in all the new strings
  * Return: Pointer to strings.
  */
-int _values_path(char **arg, char **env);
+int _values_path(char **arg, char **env)
 {
 	char *token = NULL, *path_rela = NULL, *path_absol = NULL;
 	size_t value_path, len;
